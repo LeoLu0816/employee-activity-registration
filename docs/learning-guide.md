@@ -28,7 +28,7 @@
 - 2026-10-16 學員授權：本專案由 AI 依過程自行決定時機執行 git commit 與 push，不需逐次詢問。提交採 Conventional Commits 加中文描述；不包含秘密、IDE 暫存或建置產物，不自動 force push、建分支或部署。
 - 以單元或可獨立驗證的成果為提交點，提交前檢查 diff 與相關驗證；push 後確認遠端結果，失敗如實記錄。
 - 單元切換時可換新 session；不在同一問題尚未釐清時頻繁切換。先更新 progress.md 的證據、current_module、next_step，再於新 session 讀本文件及 checkpoint 接續，不重讀整段聊天或履歷。
-- C02 已介紹 DI 三種生命週期、Singleton 執行緒安全與不可直接持有 Scoped 服務的限制；尚未做實例 ID 觀察。新 session 從此接續，不重新開始 C01。
+- C02 實作驗收與實驗清理已完成，接續點以 progress.md 為準；Middleware 例外回程順序仍需於後續除錯熟悉。新 session 不重做 C01／C02，學員要求開始 C03 後再確認 SQL Server／EF Core 環境。
 
 ## 分工方式
 

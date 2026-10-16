@@ -4,9 +4,9 @@
 
 ## Checkpoint
 
-- phase：C01 API 基線與差異概念導讀已完成；學員要求略過已懂的實驗，接續 C02。
-- current_module：C02，DI 生命週期導讀。
-- next_step：新 session 先讀 learning-guide.md 與本 checkpoint；DI 三種生命週期及 Singleton 注意事項已導讀，接著引導學員以實例 ID 觀察同請求與跨請求的物件重用；尚未開始服務拆分實作。不要重考 HTTP、JSON、DTO 或一般前後端資料流。
+- phase：C02 實作驗收與實驗清理完成；Middleware 例外回程順序仍需熟悉。
+- current_module：C03 待開始，SQL Server／EF Core 環境。
+- next_step：學員明確要求開始 C03 後，先確認 Docker 可用性與既有容器狀態，再依課綱規劃 SQL Server／EF Core 最小練習；不直接展開整套資料層。沿用現有 net10.0 API，勿重做 C02。Middleware 例外回程順序可於實際除錯補強；Options 動態更新僅導讀，未做實驗。
 - 教材入口：[課綱 C02](curriculum.md#c02請求流程與框架基礎)；C02 詳細教材尚未建立，先依課綱逐步教學。
 - 接續方式：先讀本文件與 [學習方式](learning-guide.md)，再讀當前教材；不直接展開後續單元。
 
@@ -25,7 +25,7 @@
 | 單元 | 狀態 | 成果與證據 |
 |---|---|---|
 | C01 | API 基線與概念導讀完成 | 學員確認理解 LINQ、record、required／init／nullable；差異實驗略過，未宣稱實作驗收 |
-| C02 | 進行中 | DI 生命週期導讀；服務拆分與實例 ID 實驗尚未執行 |
+| C02 | 實作驗收完成 | 學員已完成各練習；授權 AI 清理實驗後，AI 建置與清單／200／404／400／實驗路由移除驗證通過；Middleware 例外順序仍需熟悉，Options 動態更新未實驗 |
 | C03 | 未開始 | — |
 | C04 | 未開始 | — |
 | C05 | 未開始 | — |
@@ -50,6 +50,30 @@
 - 學員修正後回報 `/api/activities` 可呼叫；已理解 camelCase、路由路徑及 required。回應資料是否寫回伺服器的回答是題意誤會，不列為後端基礎不足。
 - 本次讀檔確認 Route 為 `api/activities`、三筆活動名稱／分類已修改、Title／Category 使用 required；重新執行相同 build 指令成功，0 警告、0 錯誤。最新 HTTP 成功由學員回報，本次未再啟動服務驗證。
 - 學員已說明 LINQ 延遲執行／實體化並要求跳過；record／淺層複製與 required／init／nullable 導讀後，學員確認理解。依學員節奏接續 C02；未執行上述差異實驗，不標成完整實作驗收。
+
+## C02 驗證紀錄
+
+- 學員實測：Scoped 同請求 ID 相同、跨請求不同；Transient 同請求 ID 不同；Singleton 同請求與跨請求 ID 均相同。已討論實際用途、共享狀態風險與註冊位置的除錯限制，學員確認理解。
+- AI 讀檔確認：ActivityService.GetActivities() 保留原三筆活動；Program.cs 使用 AddScoped<ActivityService>()；ActivitiesController 透過主要建構函式注入服務，Get() 委派查詢；已移除 Probe action 與 LifetimeProbe 註冊，保留實驗類別檔。
+- 學員回報服務拆分後 API 正確；AI 本次未重新呼叫 HTTP。
+- AI 查碼確認 GetActivityById(int id)、{id:int} 路由、Range(1, int.MaxValue) 與 200／404 分支已實作。學員貼出查無活動的 404 ProblemDetails，已說明 ApiController 自動轉換與路由未匹配的差異；Range 400 尚無獨立 HTTP 回報。
+- 學員已加入請求日誌 Middleware，並確認 1／999／abc 請求均有開始、結束日誌與預期狀態。AI 查碼確認結構化日誌與 await next(context) 順序；再次以獨立輸出建置成功，0 警告、0 錯誤，AI 未重跑 HTTP。
+- 學員確認例外實驗：500 ProblemDetails、不洩漏測試例外／堆疊、伺服器例外日誌與結束請求 500，並於移除故障程式後恢復 404。AI 查碼確認 AddProblemDetails、日誌之後的 UseExceptionHandler 與測試例外已移除；獨立輸出建置成功，0 警告、0 錯誤，AI 未重跑 HTTP。
+- 學員確認 404 JSON 的 traceId 與同次開始／結束日誌一致，跨請求識別碼不同。AI 查碼確認 Middleware 使用 Activity.Current?.Id ?? context.TraceIdentifier，兩筆日誌均包含 TraceId；獨立輸出建置成功，0 警告、0 錯誤，AI 未重跑 HTTP。
+- 學員回報已完成設定覆蓋實驗。AI 查碼確認基本設定有 Application:DisplayName、開發設定已移除該 key，啟動日誌讀取環境與合併後的設定；獨立輸出建置成功，0 警告、0 錯誤，git diff --check 通過。啟動顯示與覆蓋行為由學員驗證，AI 未重新啟動服務。
+- 學員回報 Options 練習完成。AI 查碼確認 ApplicationOptions、Configure 綁定與 IOptions<ApplicationOptions>.Value 讀取均已實作，獨立輸出建置成功，0 警告、0 錯誤；啟動顯示由學員確認。仍保留舊版 Configuration 字串索引啟動日誌，會重複輸出；已列入下一步清理，AI 未代改後端程式。
+- 學員回報設定驗證故障／恢復練習完成。AI 查碼確認已改用 AddOptions、Bind、非空白 Validate、ValidateOnStart，舊版啟動日誌已移除，JSON 已恢復正常名稱；獨立輸出建置成功，0 警告、0 錯誤，git diff --check 通過。啟動失敗與恢復由學員驗證，AI 未重新啟動服務。
+- 已導讀 IOptions／Snapshot／Monitor。學員對 Singleton 不能直接持有 Scoped Snapshot 提問，已用長期物件留住短期物件的例子補充；學員要求繼續。未執行動態更新實驗，不標為實作驗收；現有 IOptions 用法維持。
+- 學員回報 async-probe 等待練習完成。AI 查碼確認 action 使用 async Task<IActionResult> 與 await Task.Delay(3000)，獨立輸出建置成功，0 警告、0 錯誤，git diff --check 通過；約三秒回應由學員確認，AI 未重跑 HTTP。已說明 Task 不等於新執行緒、Task.Delay 為計時實驗，正常記憶體查詢仍保持同步。
+- 學員確認請求取消實驗，含伺服器取消日誌。AI 查碼確認 action 接收 CancellationToken、傳入 Task.Delay(10000, token)、僅於對應 token 取消時記錄並 rethrow；獨立輸出建置成功，0 警告、0 錯誤，git diff --check 通過。AI 未重跑取消 HTTP。實驗 action 與 ILogger 參數目前仍在，待學員清理。
+- 學員確認清理 async-probe 後，既有 1／999／0 查詢分別回應 200／404／400；Range 400 已補學員實測證據。AI 查碼確認實驗 action 與 ILogger 參數均移除，原查詢保留；獨立輸出建置成功，0 警告、0 錯誤，git diff --check 通過，AI 未重跑 HTTP。
+- AI 查碼發現 LocalProbe 命名 client、factory 注入與 http-probe action 已由學員加入，但未收到 HTTP 成功回報，不列為驗收。學員要求改用公開外網，避免呼叫自己造成理解負擔；已透過官方網站核對 JSONPlaceholder 不需註冊／API key，並讀取 https://jsonplaceholder.typicode.com/todos/1 的四個 JSON 欄位。後續教學以具體外部 API 情境為優先。
+- 學員回報公開 API 精簡版已完成。AI 查碼確認 JsonPlaceholder 命名 client、TodoDto、http-probe 使用 GetFromJsonAsync<TodoDto> 並傳 CancellationToken、using var 管理 client；獨立輸出建置成功，0 警告、0 錯誤，git diff --check 通過。HTTP 成功依學員回報，AI 未重跑本機 HTTP。
+- 教學調整：先給最小可用寫法，再依需求補 DI／型別／資源管理；與 Node.js 比較時對齊相同責任範圍，避免用裸 fetch 對比完整 .NET 樣板。外部 HTTP 示範使用具體公開 API，不呼叫自己。
+- 觀念確認：學員正確回答 using var 在方法離開時釋放；對 Exception Handler 移到日誌外層時結束日誌仍會執行的回答有誤，已用例外往外傳遞的流程補充。學員表示大概了解，記為已導讀、仍需熟悉，不宣稱完全掌握。
+- 學員明確授權 AI 直接清理。AI 已移除 HttpProbeAsync、IHttpClientFactory 建構函式參數、JsonPlaceholder 註冊，刪除 TodoDto.cs 與 LifetimeProbe.cs；兩個修改的 C# 檔保留 UTF-8 無 BOM／CRLF。以獨立輸出目錄 `employee-activity-registration-c02-final` 建置成功，0 警告、0 錯誤。
+- AI 使用最新 DLL 在動態 loopback 連接埠啟動獨立驗證程序，載入原專案設定；清單為 200／三筆資料、活動 1 為 200／資料正確、999 為 404、0 為 400／errors.id、http-probe 為 404，全部通過。驗證程序已停止，未停止學員原程序；git diff --check 通過。未新增自動化測試檔，未修改正式查詢邏輯。
+- 一般建置因執行中的 ActivityRegistration.Api 鎖定 apphost 複製而產生 MSB3026 警告；未停止學員程序。改用 `dotnet build src/ActivityRegistration.Api/ActivityRegistration.Api.csproj --no-restore -p:UseAppHost=false -o "$env:TEMP\employee-activity-registration-c02-check"`，建置成功，0 個警告、0 個錯誤。
 
 ## 尚未確認
 
