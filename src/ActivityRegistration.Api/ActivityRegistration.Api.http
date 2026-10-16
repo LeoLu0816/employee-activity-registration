@@ -1,0 +1,6 @@
+@ActivityRegistration.Api_HostAddress = http://localhost:5152
+
+GET {{ActivityRegistration.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
