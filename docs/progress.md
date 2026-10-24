@@ -1,13 +1,13 @@
 # 學習進度
 
-更新日期：2026-10-16（Asia/Taipei）。
+更新日期：2026-10-24（Asia/Taipei）。
 
 ## Checkpoint
 
-- phase：C02 實作驗收與實驗清理完成；Middleware 例外回程順序仍需熟悉。
-- current_module：C03 待開始，SQL Server／EF Core 環境。
-- next_step：學員明確要求開始 C03 後，先確認 Docker 可用性與既有容器狀態，再依課綱規劃 SQL Server／EF Core 最小練習；不直接展開整套資料層。沿用現有 net10.0 API，勿重做 C02。Middleware 例外回程順序可於實際除錯補強；Options 動態更新僅導讀，未做實驗。
-- 教材入口：[課綱 C02](curriculum.md#c02請求流程與框架基礎)；C02 詳細教材尚未建立，先依課綱逐步教學。
+- phase：C03 進行中；SQL Server 容器、Entity／DbContext、Migration、種子資料、活動查詢改 EF Core、不可翻譯表達式與 change tracker 實驗已完成。
+- current_module：C03，SQL Server／EF Core 與資料建模。
+- next_step：同一 DbContext 平行查詢（Task.WhenAll）實驗；之後建立 API 整合測試入口（真實 SQL Server，不用 EF InMemory），並做「從空資料庫 Migration＋種子」驗收。報名資料結構尚未建立。
+- 教材入口：[課綱 C03](curriculum.md#c03sql-serveref-core-與資料建模)；C03 詳細教材尚未建立，先依課綱逐步教學。
 - 接續方式：先讀本文件與 [學習方式](learning-guide.md)，再讀當前教材；不直接展開後續單元。
 
 ## 已完成
@@ -26,7 +26,7 @@
 |---|---|---|
 | C01 | API 基線與概念導讀完成 | 學員確認理解 LINQ、record、required／init／nullable；差異實驗略過，未宣稱實作驗收 |
 | C02 | 實作驗收完成 | 學員已完成各練習；授權 AI 清理實驗後，AI 建置與清單／200／404／400／實驗路由移除驗證通過；Middleware 例外順序仍需熟悉，Options 動態更新未實驗 |
-| C03 | 未開始 | — |
+| C03 | 進行中 | 活動查詢已改 SQL Server；AI 實跑 200／200／404／400 與 SQL 日誌通過；整合測試、報名結構、平行查詢實驗未完成 |
 | C04 | 未開始 | — |
 | C05 | 未開始 | — |
 | C06 | 未開始 | — |
@@ -75,11 +75,22 @@
 - AI 使用最新 DLL 在動態 loopback 連接埠啟動獨立驗證程序，載入原專案設定；清單為 200／三筆資料、活動 1 為 200／資料正確、999 為 404、0 為 400／errors.id、http-probe 為 404，全部通過。驗證程序已停止，未停止學員原程序；git diff --check 通過。未新增自動化測試檔，未修改正式查詢邏輯。
 - 一般建置因執行中的 ActivityRegistration.Api 鎖定 apphost 複製而產生 MSB3026 警告；未停止學員程序。改用 `dotnet build src/ActivityRegistration.Api/ActivityRegistration.Api.csproj --no-restore -p:UseAppHost=false -o "$env:TEMP\employee-activity-registration-c02-check"`，建置成功，0 個警告、0 個錯誤。
 
+## C03 驗證紀錄
+
+- 學員要求後，AI 清除 Docker Desktop 內所有前公司殘留（容器、映像、volume、網路、build cache，均為 0）。
+- AI 建立 `docker-compose.yml`（SQL Server 2022 Developer、具名 volume、健康檢查），容器 healthy。學員完成 down／down -v 持久化實驗；對 -v 的理解原為「刪容器」，已更正為「多刪 volume」。
+- 學員選擇本機開發密碼與連線字串提交至 `appsettings.Development.json`（learning-guide 規則已同步）；移除 .env 與 user-secrets。
+- AI 加入 EF Core SqlServer／Design 10.0.13 與 dotnet-ef 工具；直接引用 System.Security.Cryptography.Pkcs 10.0.13 消除間接弱點警告。
+- 學員撰寫 Activity Entity、AppDbContext、AddDbContext 註冊。AI 審查發現 `using System.Diagnostics` 造成 DbSet 指向 System.Diagnostics.Activity、缺 options 建構函式、Capacity 為 string、nullable 警告，學員已修正。
+- 學員以 Fluent API 設定 Title 100／Category 50，remove 後重建 InitialCreate；以 HasData 建立 SeedActivities。AI 查資料庫確認兩筆 Migration 歷史與三筆活動。學員正確說明 __EFMigrationsHistory、HasData 需指定主鍵、已套用 Migration 應新增 Migration 修改。
+- 學員將 ActivityService 改為注入 AppDbContext、投影 DTO、ToListAsync／FirstOrDefaultAsync；曾漏 `using Microsoft.EntityFrameworkCore` 導致 .NET 10 內建 AsyncEnumerable.ToListAsync 誤判，及單筆查詢先撈全表，均已修正。AI 以獨立連接埠實跑：清單 200、1 為 200、999 為 404、0 為 400；SQL 為 `SELECT TOP(1) ... WHERE [a].[Id] = @id`。
+- 學員實測自訂方法放入 Where 於執行期報翻譯錯誤；已說明 EF Core 3 起不再自動用戶端評估。
+- 學員完成 change tracker 實驗：DebugView 顯示 Originally 值、AsNoTracking 修改不寫入。學員不知道 AsNoTracking 的用途，已說明追蹤成本，以及投影 DTO 本來就不追蹤；DebugView 狀態未經 DetectChanges 故顯示 Unchanged。實驗程式已由學員清除，AI 建置 0 警告 0 錯誤。
+
 ## 尚未確認
 
 - 學員每週可投入時間；課綱先依單元驗收推進。
 - Azure 訂用帳戶、部署區域與月費上限；於 C07 建立資源前確認。
-- Docker 狀態；於 C03 依需要確認。
 
 ## 更新規則
 
