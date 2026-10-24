@@ -45,6 +45,29 @@ namespace ActivityRegistration.Api.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Activities");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Capacity = 30,
+                            Category = "講座",
+                            Title = "技術分享"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Capacity = 16,
+                            Category = "運動",
+                            Title = "下班羽球"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Capacity = 12,
+                            Category = "手作",
+                            Title = "咖啡沖煮"
+                        });
                 });
 #pragma warning restore 612, 618
         }
