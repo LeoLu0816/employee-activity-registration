@@ -12,17 +12,17 @@ namespace ActivityRegistration.Api.Controllers
     ) : ControllerBase
     {
         [HttpGet]
-        public IEnumerable<ActivitySummaryDto> Get()
+        public async Task<List<ActivitySummaryDto>> Get()
         {
-            return activityService.GetActivities();
+            return await activityService.GetActivitiesAsync();
         }
 
         [HttpGet("{id:int}")]
-        public ActionResult<ActivitySummaryDto> GetById(
+        public async Task<ActionResult<ActivitySummaryDto>> GetById(
             [Range(1, int.MaxValue)] int id
         )
         {
-            var activity = activityService.GetActivityById(id);
+            var activity = await activityService.GetActivityByIdAsync(id);
 
             if (activity is null)
             {

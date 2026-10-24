@@ -1,42 +1,36 @@
-﻿using ActivityRegistration.Api.Dtos;
+﻿using ActivityRegistration.Api.Data;
+using ActivityRegistration.Api.Dtos;
+using Microsoft.EntityFrameworkCore;
 
 namespace ActivityRegistration.Api.Services
 {
-    public class ActivityService
+    public class ActivityService(AppDbContext db)
     {
-        public IEnumerable<ActivitySummaryDto> GetActivities()
+        public async Task<List<ActivitySummaryDto>> GetActivitiesAsync()
         {
-            var list = new List<ActivitySummaryDto>();
-            list.Add(new ActivitySummaryDto()
-            {
-                Id = 1,
-                Title = "技術分享",
-                Category = "講座",
-                Capacity = 30,
-            });
-
-            list.Add(new ActivitySummaryDto()
-            {
-                Id = 2,
-                Title = "下班羽球",
-                Category = "運動",
-                Capacity = 16,
-            });
-
-            list.Add(new ActivitySummaryDto()
-            {
-                Id = 3,
-                Title = "咖啡沖煮",
-                Category = "手作",
-                Capacity = 12,
-            });
-
-            return list;
+            return await db.Activities
+                .Select(x => new ActivitySummaryDto
+                {
+                    Id = x.Id,
+                    Title = x.Title,
+                    Category = x.Category,
+                    Capacity = x.Capacity
+                })
+                .ToListAsync();
         }
 
-        public ActivitySummaryDto? GetActivityById(int id)
+        public async Task<ActivitySummaryDto?> GetActivityByIdAsync(int id)
         {
-            return GetActivities().FirstOrDefault(x => x.Id == id);
+            return await db.Activities
+                .Where(x => x.Id == id)
+                .Select(x => new ActivitySummaryDto
+                {
+                    Id = x.Id,
+                    Title = x.Title,
+                    Category = x.Category,
+                    Capacity = x.Capacity
+                })
+                .FirstOrDefaultAsync();
         }
     }
 }
