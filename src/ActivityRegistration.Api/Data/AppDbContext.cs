@@ -18,6 +18,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             entity.HasData(new Activity { Id = 2, Title = "下班羽球", Category = "運動", Capacity = 16 });
             entity.HasData(new Activity { Id = 3, Title = "咖啡沖煮", Category = "手作", Capacity = 12 });
         });
+
+        // 所有資料表統一加上專案前綴 EAR_（Employee Activity Registration）；放在最後，新增的 Entity 也會自動套用
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+        {
+            entityType.SetTableName($"EAR_{entityType.GetTableName()}");
+        }
     }
 }
 

@@ -53,6 +53,7 @@
 - Docker Compose 建立本機依賴；k6 執行可重現的壓力測試。
 - Vue 3 + TypeScript 由 AI 製作；先完成 API，再接畫面。
 - 一個後端應用，按活動、報名與身分分組；從簡單結構開始，按實際需要拆分。
+- 資料表統一加專案前綴 `EAR_`（Employee Activity Registration），由 AppDbContext 集中套用；EF 的 `__EFMigrationsHistory` 維持預設名稱。
 
 應用程式已位於 `src/ActivityRegistration.Api/`；測試預計放在 `tests/`、壓測放在 `load-tests/`、部署設定放在 `infra/`，依對應單元建立。
 

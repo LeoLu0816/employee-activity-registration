@@ -44,7 +44,7 @@ namespace ActivityRegistration.Api.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Activities");
+                    b.ToTable("EAR_Activities");
 
                     b.HasData(
                         new
