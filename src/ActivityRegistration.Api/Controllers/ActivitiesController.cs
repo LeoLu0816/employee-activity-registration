@@ -31,6 +31,5 @@ namespace ActivityRegistration.Api.Controllers
 
             return Ok(activity);
         }
-
     }
 }

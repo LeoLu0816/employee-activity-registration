@@ -21,9 +21,22 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 指令
 
-專案檔在 `src/ActivityRegistration.Api/`（.NET 10，`net10.0`），`.slnx` 也在同目錄。
+解決方案 `ActivityRegistration.slnx` 在根目錄，含 `src/ActivityRegistration.Api`（.NET 10）與 `tests/ActivityRegistration.Api.Tests`（xUnit）。
 
 ```bash
+# 本機依賴（SQL Server），測試與 API 都需要它在跑
+docker compose up -d
+
+# 全部測試（連真實 SQL Server；每次自動刪除並重建 ActivityRegistration_Test 資料庫）
+dotnet test ActivityRegistration.slnx
+
+# 單一測試
+dotnet test ActivityRegistration.slnx --filter "FullyQualifiedName~類別或方法名稱"
+
+# Migration（--project 指向 API 專案）
+dotnet ef migrations add <名稱> --project src/ActivityRegistration.Api
+dotnet ef database update --project src/ActivityRegistration.Api
+
 # 建置
 dotnet build src/ActivityRegistration.Api/ActivityRegistration.Api.csproj --no-restore
 
