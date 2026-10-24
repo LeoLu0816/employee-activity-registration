@@ -22,18 +22,24 @@ public class ActivitiesApiTests(ApiFactory factory)
     }
 
     [Fact]
-    public async Task GetActivities_ReturnsError()
+    public async Task GetActivities_ReturnsCode404()
     {
         var client = factory.CreateClient();   // 會打到記憶體裡的 API 的 HttpClient
 
         // 1. GET /api/activities
-        var res1 = await client.GetAsync("/api/activities/999");
+        var res = await client.GetAsync("/api/activities/999");
         // 2. 確認狀態碼是 404
-        Assert.Equal(404, ((int)res1.StatusCode));
+        Assert.Equal(404, (int)res.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetActivities_ReturnsCode400()
+    {
+        var client = factory.CreateClient();   // 會打到記憶體裡的 API 的 HttpClient
 
         // 1. GET /api/activities
-        var res2 = await client.GetAsync("/api/activities/0");
+        var res = await client.GetAsync("/api/activities/0");
         // 2. 確認狀態碼是 400
-        Assert.Equal(400, ((int)res2.StatusCode));
+        Assert.Equal(400, ((int)res.StatusCode));
     }
 }
