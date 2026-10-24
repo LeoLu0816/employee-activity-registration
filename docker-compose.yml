@@ -16,8 +16,8 @@ services:
       ACCEPT_EULA: "Y"
       # 使用免費的 Developer 版（功能完整、僅限開發測試）
       MSSQL_PID: "Developer"
-      # SA（最高權限帳號）密碼從 .env 讀取，不寫進 git；未設定時啟動直接報錯
-      MSSQL_SA_PASSWORD: "${MSSQL_SA_PASSWORD:?請在 .env 設定 MSSQL_SA_PASSWORD}"
+      # SA（最高權限帳號）密碼；僅供本機容器使用，需與 appsettings.Development.json 的連線字串一致
+      MSSQL_SA_PASSWORD: "KvTApnW7bR4dygfhdC4Vx2NAa1!"
     # 對外開放的連接埠
     ports:
       # host 的 1433 對應容器的 1433（SQL Server 預設埠）
