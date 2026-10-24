@@ -4,9 +4,9 @@
 
 ## Checkpoint
 
-- phase：C03 進行中；SQL Server 容器、Entity／DbContext、Migration、種子資料、活動查詢改 EF Core、不可翻譯表達式與 change tracker 實驗已完成。
-- current_module：C03，SQL Server／EF Core 與資料建模。
-- next_step：同一 DbContext 平行查詢（Task.WhenAll）實驗；之後建立 API 整合測試入口（真實 SQL Server，不用 EF InMemory），並做「從空資料庫 Migration＋種子」驗收。報名資料結構尚未建立。
+- phase：C03 實作項目完成；活動／報名資料表、Migration、種子、EF Core 查詢、整合測試入口均已驗證。
+- current_module：C03 收尾。
+- next_step：C03 面試練習兩題（EF Core 與 EF6 差異、Migration 與建置差異）由學員口述；之後進 C04（登入、授權與資料所有權）。報名寫入邏輯屬 C05，C03 不做。
 - 教材入口：[課綱 C03](curriculum.md#c03sql-serveref-core-與資料建模)；C03 詳細教材尚未建立，先依課綱逐步教學。
 - 接續方式：先讀本文件與 [學習方式](learning-guide.md)，再讀當前教材；不直接展開後續單元。
 
@@ -26,7 +26,7 @@
 |---|---|---|
 | C01 | API 基線與概念導讀完成 | 學員確認理解 LINQ、record、required／init／nullable；差異實驗略過，未宣稱實作驗收 |
 | C02 | 實作驗收完成 | 學員已完成各練習；授權 AI 清理實驗後，AI 建置與清單／200／404／400／實驗路由移除驗證通過；Middleware 例外順序仍需熟悉，Options 動態更新未實驗 |
-| C03 | 進行中 | 活動查詢已改 SQL Server；AI 實跑 200／200／404／400 與 SQL 日誌通過；整合測試、報名結構、平行查詢實驗未完成 |
+| C03 | 實作驗收完成，面試練習未做 | 活動查詢改 SQL Server；報名表含唯一索引與 Restrict；整合測試 3 項通過（從空資料庫 Migration＋種子） |
 | C04 | 未開始 | — |
 | C05 | 未開始 | — |
 | C06 | 未開始 | — |
@@ -86,6 +86,10 @@
 - 學員將 ActivityService 改為注入 AppDbContext、投影 DTO、ToListAsync／FirstOrDefaultAsync；曾漏 `using Microsoft.EntityFrameworkCore` 導致 .NET 10 內建 AsyncEnumerable.ToListAsync 誤判，及單筆查詢先撈全表，均已修正。AI 以獨立連接埠實跑：清單 200、1 為 200、999 為 404、0 為 400；SQL 為 `SELECT TOP(1) ... WHERE [a].[Id] = @id`。
 - 學員實測自訂方法放入 Where 於執行期報翻譯錯誤；已說明 EF Core 3 起不再自動用戶端評估。
 - 學員完成 change tracker 實驗：DebugView 顯示 Originally 值、AsNoTracking 修改不寫入。學員不知道 AsNoTracking 的用途，已說明追蹤成本，以及投影 DTO 本來就不追蹤；DebugView 狀態未經 DetectChanges 故顯示 Unchanged。實驗程式已由學員清除，AI 建置 0 警告 0 錯誤。
+- 學員完成 Task.WhenAll 平行查詢實驗，看到 ExceptionHandlerMiddleware 日誌但不知原因；已說明單一 DbContext 一條連線、一份 change tracker，需要時用 IDbContextFactory。實驗程式已清除。
+- 學員選擇解決方案移至根目錄（`ActivityRegistration.slnx`）。AI 建立 xUnit 測試專案與 ApiFactory（改連 ActivityRegistration_Test、測試前 EnsureDeleted＋MigrateAsync、ICollectionFixture 依序執行）。學員撰寫活動清單 200／3 筆、404、400 測試並拆成單一檢查；AI 執行 `dotnet test` 3 通過、確認測試庫從空建立且開發庫未受影響。學員以「DB 連線」解釋依序執行，已更正為共用資料互相干擾。
+- 學員要求資料表加前綴：AI 以 OnModelCreating 迴圈統一加 `EAR_`，AddTablePrefix 為 RenameTable，資料保留；`__EFMigrationsHistory` 不改名。學員要求 Entity 類別可辨識，選擇 `Entity` 後綴，AI 改名 ActivityEntity／RegistrationEntity，確認不產生資料表變更。
+- 報名設計由學員選擇「一人一活動一筆，取消／恢復改狀態」；EmployeeId 為 nvarchar(450) 暫不加外鍵（C04 對齊 Identity）。學員撰寫 RegistrationEntity、RegistrationStatus（明確數值）、關聯與唯一索引；AI 審查發現 CreatedAt 只有 getter 被 EF 忽略、前綴迴圈須在所有設定之後、Cascade 不適合報名資料，學員已修正為 Restrict。AI 查資料庫確認 EAR_Registrations、外鍵 NO_ACTION、四筆 Migration 歷史；`dotnet test` 3 通過。
 
 ## 尚未確認
 
