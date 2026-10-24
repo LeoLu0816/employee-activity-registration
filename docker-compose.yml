@@ -1,0 +1,47 @@
+# 本機開發依賴：只放 API 需要的外部服務，API 本身仍在 host 用 dotnet run 執行
+# Compose 專案名稱固定，避免用資料夾名稱推導，讓容器／volume 名稱可預期
+name: activity-registration
+
+# 列出要啟動的服務（每個服務對應一個容器）
+services:
+  # SQL Server 服務；API 連線字串的主機名稱在 host 上用 localhost
+  sqlserver:
+    # 微軟官方 SQL Server 2022 Linux 映像檔，與 Azure SQL 同一引擎系列
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    # 固定容器名稱，方便 docker logs／docker exec 時直接指定
+    container_name: activity-registration-sqlserver
+    # 容器內要設定的環境變數
+    environment:
+      # 同意微軟授權條款；不設定容器會直接拒絕啟動
+      ACCEPT_EULA: "Y"
+      # 使用免費的 Developer 版（功能完整、僅限開發測試）
+      MSSQL_PID: "Developer"
+      # SA（最高權限帳號）密碼從 .env 讀取，不寫進 git；未設定時啟動直接報錯
+      MSSQL_SA_PASSWORD: "${MSSQL_SA_PASSWORD:?請在 .env 設定 MSSQL_SA_PASSWORD}"
+    # 對外開放的連接埠
+    ports:
+      # host 的 1433 對應容器的 1433（SQL Server 預設埠）
+      - "1433:1433"
+    # 資料持久化設定
+    volumes:
+      # 資料庫檔案存到具名 volume；容器刪掉重建，資料仍保留
+      - sqlserver-data:/var/opt/mssql
+    # 健康檢查：確認 SQL Server 真的能接受查詢，而不只是容器在跑
+    healthcheck:
+      # 用容器內建的 sqlcmd 執行 SELECT 1；-C 表示信任自簽憑證；$$ 讓 Compose 不展開變數，交給容器內的 shell 讀
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q \"SELECT 1\" -b -o /dev/null"]
+      # 每 10 秒檢查一次
+      interval: 10s
+      # 單次檢查超過 5 秒視為失敗
+      timeout: 5s
+      # 連續失敗 10 次才標成 unhealthy
+      retries: 10
+      # 啟動後前 20 秒的失敗不計次，給 SQL Server 初始化時間
+      start_period: 20s
+    # Docker Desktop 重開後自動啟動，除非手動 docker compose stop
+    restart: unless-stopped
+
+# 宣告上面用到的具名 volume
+volumes:
+  # 由 Docker 管理的資料卷；docker compose down 不刪，加 -v 才會刪
+  sqlserver-data:
