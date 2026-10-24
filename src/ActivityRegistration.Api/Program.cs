@@ -1,6 +1,8 @@
-using Microsoft.Extensions.Options;
-using ActivityRegistration.Api.Services;
+using ActivityRegistration.Api.Data;
 using ActivityRegistration.Api.Options;
+using ActivityRegistration.Api.Services;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +22,9 @@ builder.Services.AddOptions<ApplicationOptions>()
         options => !string.IsNullOrWhiteSpace(options.DisplayName),
         "Application:DisplayName 不可空白")
     .ValidateOnStart();
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
 
 var app = builder.Build();
 
